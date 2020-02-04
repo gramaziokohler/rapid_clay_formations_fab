@@ -8,7 +8,7 @@ import Rhino.Geometry as rg
 
 from compas_rcf.ur import comm
 from compas_rcf.ur import ur_standard
-from compas_rcf.ur.helpers import visualize_ur_script
+from compas_rcf.ur.visualize_urscript import visualize_urscript
 from compas_rcf.utils.util_funcs import list_elem_w_index_wrap
 
 # UR movement
@@ -217,7 +217,7 @@ def ur_clay_shooting(picking_planes,
         script += _safe_travel_moves(safe_pos_list, reverse=True)
 
     if viz_planes_bool:
-        viz_planes = visualize_ur_script(script)
+        viz_planes = visualize_urscript(script)
     else:
         viz_planes = None
 

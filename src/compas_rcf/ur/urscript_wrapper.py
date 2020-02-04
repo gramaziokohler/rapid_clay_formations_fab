@@ -2,6 +2,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 from compas.geometry import Frame
 
 from compas_rcf.ur.helpers import format_urscript_cmd
@@ -12,13 +17,15 @@ from compas_rcf.ur.helpers import format_joint_positions
 
 
 @format_urscript_cmd
-def movel(frame_to, accel=1.2, vel=.25, time=0, zone=0) -> str:
+def movel(frame_to, accel=1.2, vel=.25, time=0, zone=0):
+    # type: (Frame, float, float, float, float) -> str
     pose = format_pose(frame_to)
     return "movel({:s}, a={:.2f}, v={:2f}, t={:2f} r={:2f})".format(pose, accel, vel, time, zone)
 
 
 @format_urscript_cmd
 def movej(joint_positions, accel=1.4, vel=1.05, time=0, zone=0):
+    # type: (List[float], float, float, float, float) -> str
     """
     Function that returns UR script for linear movement in joint space.
 
@@ -42,24 +49,28 @@ def movej(joint_positions, accel=1.4, vel=1.05, time=0, zone=0):
 
 
 @format_urscript_cmd
-def set_TCP(tcp_frame: Frame) -> str:
+def set_TCP(tcp_frame):
+    # type: (Frame) -> str
     pose = format_pose(tcp_frame)
     return "set_tcp({:s})".format(pose)
 
 
 @format_urscript_cmd
-def textmsg(string: str) -> str:
+def textmsg(string):
+    # type: (str) -> str
     return "textmsg(\"" + string + "\")"
 
 
 @format_urscript_cmd
-def popup(string: str) -> str:
+def popup(string):
+    # type: (str) -> str
     # Popup title not implemented, neither is error or warning flags
     return "popup(\"{}\")".format(string)
 
 
 @format_urscript_cmd
-def sleep(seconds: float) -> str:
+def sleep(seconds):
+    # type: (float) -> str
     """
     Function that returns UR script for sleep()
 
@@ -76,17 +87,20 @@ def sleep(seconds: float) -> str:
 
 
 @format_urscript_cmd
-def socket_open(server_address: str, server_port: int) -> str:
+def socket_open(server_address, server_port):
+    # type: (str, int) -> str
     return "socket_open(\"{}\", {:d})".format(server_address, server_port)
 
 
 @format_urscript_cmd
-def socket_send_string(text: str) -> str:
+def socket_send_string(text):
+    # type: (str) -> str
     return "socket_send_string(\"" + text + "\")"
 
 
 @format_urscript_cmd
-def socket_close() -> str:
+def socket_close():
+    # type: () -> str
     return "socket_close()"
 
 
@@ -94,14 +108,16 @@ def socket_close() -> str:
 
 
 @format_urscript_cmd
-def set_DO(pin: int, state: bool) -> str:
+def set_DO(pin, state):
+    # type: (int, bool) -> str
     # deprecation warning in UR manual
     # return "set_digital_out({:d}, {})".format(pin, state)
     return set_standard_digital_out(pin, state)
 
 
 @format_urscript_cmd
-def set_standard_digital_out(pin: int, state: bool):
+def set_standard_digital_out(pin, state):
+    # type: (int, bool) -> str
     """Set standard digital output signal level
 
     Parameters
@@ -119,7 +135,8 @@ def set_standard_digital_out(pin: int, state: bool):
 
 
 @format_urscript_cmd
-def set_standard_analog_out(pin: int, signal_level: float):
+def set_standard_analog_out(pin, signal_level):
+    # type: (int, float) -> str
     """Set standard analog output level
 
     Parameters
