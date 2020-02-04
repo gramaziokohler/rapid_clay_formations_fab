@@ -1,4 +1,6 @@
 """
+Will be replaced by urscript_wrapper
+
 This module wraps standard UR Script functions.
 Main change is that plane information substitute for pose data
 """
@@ -9,8 +11,8 @@ from __future__ import print_function
 
 import Rhino.Geometry as rg
 
-from compas_rcf.utils import axis_angle_vector_from_plane_to_plane
-from compas_rcf.utils import rgtransform_to_matrix
+from compas_rcf.ur.helpers import axis_angle_vector_from_plane_to_plane
+from compas_rcf.utils.rhino_to_compas import rgtransform_to_matrix
 
 import compas.geometry as cg
 from compas.geometry.transformations import axis_angle_vector_from_matrix
