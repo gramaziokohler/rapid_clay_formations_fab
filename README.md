@@ -15,6 +15,7 @@ python module for MAS DFAB project Rapid Clay Formations
 ### With [Anaconda](https://www.anaconda.com/)
 
 1.  (Optional) set up environment if you don't have one with `compas_rrc`
+    * `conda config --add channels conda-forge`
     * `conda create -n compas_rcf python=3.7 git compas_fab`
     * `conda activate compas_rcf`
 2.  Dependency [compas\_rrc](https://bitbucket.org/ethrfl/compas_rrc) is a private repository and needs to be installed first.
@@ -39,6 +40,7 @@ python module for MAS DFAB project Rapid Clay Formations
 ###  With Anaconda
 
 1.  (Optional) set up environment
+    -   `conda config --add channels conda-forge`
     -   `conda create -n compas_rcf-dev python=3.7 git compas_fab`
     -   `conda activate compas_rcf-dev`
 2.  Dependency [compas\_rrc](https://bitbucket.org/ethrfl/compas_rrc) is a private repository and needs to be installed first.
