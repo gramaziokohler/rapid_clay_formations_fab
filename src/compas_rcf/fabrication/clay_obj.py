@@ -5,6 +5,7 @@ from __future__ import print_function
 import json
 import math
 from itertools import count
+import collections
 
 import compas.geometry as cg
 from compas import IPY
@@ -21,7 +22,7 @@ from compas_rcf.utils.util_funcs import list_elem_w_index_wrap
 if IPY:
     import Rhino.Geometry as rg
 
-__all__ = ["ClayBullet", "check_id_collision"]
+# __all__ = ["ClayBullet", "check_id_collision", "ClayBulletEncoder"]
 
 
 class ClayBullet(object):
@@ -54,6 +55,8 @@ class ClayBullet(object):
         clay_density=2.0,
         precision=5,
         tool=None,
+        vkey=None,
+        **kwargs
     ):
         self.location = location
         self.trajectory_to = trajectory_to
@@ -114,8 +117,14 @@ class ClayBullet(object):
     def trajectory_to(self, frame_list):
         """Ensure that trajectory_to are stored as compas.geometry.Frame objects."""
         self._trajectory_to = []
-        for frame_like in frame_list:
-            frame = ensure_frame(frame_like)
+
+        if isinstance(frame_list, collections.Sequence):
+            for frame_like in frame_list:
+                print(frame_like)
+                frame = ensure_frame(frame_like)
+                self._trajectory_to.append(frame)
+        else:
+            frame = ensure_frame(frame_list)
             self._trajectory_to.append(frame)
 
     @property
@@ -132,8 +141,13 @@ class ClayBullet(object):
     def trajectory_from(self, frame_list):
         """Ensure that trajectory_from are stored as compas.geometry.Frame objects."""
         self._trajectory_from = []
-        for frame_like in frame_list:
-            frame = ensure_frame(frame_like)
+        if isinstance(frame_list, collections.Sequence):
+            for frame_like in frame_list:
+                print(frame_like)
+                frame = ensure_frame(frame_like)
+                self._trajectory_from.append(frame)
+        else:
+            frame = ensure_frame(frame_list)
             self._trajectory_from.append(frame)
 
     @property
@@ -309,7 +323,7 @@ class ClayBullet(object):
             location,
             trajectory_to=trajectory_to,
             trajectory_from=trajectory_from,
-            **kwargs,
+            **kwargs
         )
 
         @classmethod
