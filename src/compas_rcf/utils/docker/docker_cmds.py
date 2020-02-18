@@ -21,7 +21,7 @@ def setup_env_vars(env_vars):
     for key in env_vars:
         if os.name == "nt":
             list_vars.append("set")
-        list_vars.append('{}="{}"'.format(key.upper(), env_vars[key]))
+        list_vars.append("{}={}".format(key.upper(), env_vars[key]))
         list_vars.append("&&")
 
     return list_vars

@@ -8,6 +8,7 @@ from __future__ import print_function
 
 import logging
 import sys
+import time
 from datetime import datetime
 from os import path
 
@@ -153,14 +154,16 @@ def send_picking(client, picking_frame):
     )
 
     client.send_and_wait(
-        MoveToFrame(picking_frame, CONF.movement.speed_picking, CONF.movement.zone_pick)
+        MoveToFrame(
+            picking_frame, CONF.movement.speed_travel, CONF.movement.zone_travel
+        )
     )
 
     send_grip_release(client, CONF.tool.grip_state)
 
     client.send(
         MoveToFrame(
-            offset_picking, CONF.movement.speed_travel, CONF.movement.zone_travel
+            offset_picking, CONF.movement.speed_picking, CONF.movement.zone_pick
         )
     )
 
@@ -374,6 +377,9 @@ def abb_run(cmd_line_args):
     ############################################################################
     compose_up(docker_compose_paths["base"], remove_orphans=False)
     logging.debug("Compose up base")
+    ip = robot_ips[CONF.target]
+    compose_up(docker_compose_paths["abb_driver"], ROBOT_IP=ip)
+    logging.debug("Compose up abb_driver")
 
     ############################################################################
     # Load fabrication data                                                    #
@@ -403,13 +409,16 @@ def abb_run(cmd_line_args):
     for i in range(3):
         try:
             logging.debug("Pinging robot")
-            ping(abb, timeout=10)
+            ping(abb, timeout=15)
             logging.debug("Breaking loop after successful ping")
             break
         except TimeoutError:
             logging.info("No response from controller, restarting abb-driver service.")
-            compose_up(docker_compose_paths["abb_driver"], force_recreate=True, IP=ip)
+            compose_up(
+                docker_compose_paths["abb_driver"], force_recreate=True, ROBOT_IP=ip
+            )
             logging.debug("Compose up for abb_driver with robot-ip={}".format(ip))
+            time.sleep(5)
     else:
         raise TimeoutError("Failed to connect to robot")
 
