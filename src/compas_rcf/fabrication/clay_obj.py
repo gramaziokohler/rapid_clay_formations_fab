@@ -120,7 +120,6 @@ class ClayBullet(object):
 
         if isinstance(frame_list, collections.Sequence):
             for frame_like in frame_list:
-                print(frame_like)
                 frame = ensure_frame(frame_like)
                 self._trajectory_to.append(frame)
         else:
@@ -143,7 +142,6 @@ class ClayBullet(object):
         self._trajectory_from = []
         if isinstance(frame_list, collections.Sequence):
             for frame_like in frame_list:
-                print(frame_like)
                 frame = ensure_frame(frame_like)
                 self._trajectory_from.append(frame)
         else:

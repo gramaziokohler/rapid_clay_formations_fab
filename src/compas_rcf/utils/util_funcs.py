@@ -119,7 +119,6 @@ def ensure_frame(frame_like):
         return cg.Frame.from_plane(frame_like)
 
     if IPY:
-        print("Hi")
         if isinstance(frame_like, rg.Plane):
             return rgplane_to_cgframe(frame_like)
         if isinstance(frame_like, rg.Point3d):
