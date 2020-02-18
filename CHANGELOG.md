@@ -8,7 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-
 ### Changed
 - Grasshopper example file `create_bullets_read_write_json` updated to handle
 Grasshopper trees and take vkeys as an attribute.
@@ -21,6 +20,15 @@ to lists. (Which IronPy 2.7 can't handle)
 
 ### Removed
 
+## \[0.1.15\] [\2020-10-15\]
+
+### Added
+* Attribute dictionary added to class `compas_rcf.fabrication.clay_obj.ClayBullet`
+* Attribute `vkey` added to `ClayBullet` to store vertex key from `compas.datastructures.Network`
+* Simple import tests added
+
+### Changed
+* Property `Vector` in `ClayBullet` changed to represent the bullets center as a line.
 
 ## \[0.1.14\] \[2020-10-14\]
 
