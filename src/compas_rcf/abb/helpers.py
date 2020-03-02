@@ -42,12 +42,9 @@ def ping(client, timeout=10):
         else:
             raise
 
-    ############################################################################
-    # Connection check                                                         #
-    ############################################################################
-
 
 def connection_check(client):
+    """Connection check."""
     ip = robot_ips[fab_conf["target"].get()]
     for i in range(3):
         try:

@@ -255,12 +255,13 @@ def abb_run():
         pick_frame = pick_frame_from_grid(i, bullet.height)
 
         # Pick bullet
-        pick_result = pick_bullet(abb, pick_frame)
+        pick_future = pick_bullet(abb, pick_frame)
 
         # Place bullet
-        place_result = place_bullet(abb, bullet)
+        place_future = place_bullet(abb, bullet)
 
-        cycle_time = pick_result + place_result
+        # This blocks until cycle is finished
+        cycle_time = pick_future.result() + place_future.result()
 
         bullet.cycle_time = cycle_time
         log.debug("Cycle time was {}".format(bullet.cycle_time))

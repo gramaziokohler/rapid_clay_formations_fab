@@ -152,8 +152,7 @@ def pick_bullet(client, picking_frame):
 
     client.send(StopWatch())
 
-    # Blocks until finished
-    return client.send(ReadWatch()).result()
+    return client.send(ReadWatch())
 
 
 def place_bullet(client, bullet):
@@ -235,8 +234,7 @@ def place_bullet(client, bullet):
 
     client.send(StopWatch())
 
-    # Blocks until finished
-    return client.send(ReadWatch()).result()
+    return client.send(ReadWatch())
 
 
 def grip_and_release(client, do_state):
