@@ -1,7 +1,7 @@
 """Transformation functions for localization using Rhino and rhinoscriptsyntax.
 
-Code adapted from source code by Selen Ercan et al at Gramazio Kohler Research,
-ETH Zurich (2019).
+Code adapted from source code by Selen Ercan and Sandro Meier at Gramazio
+Kohler Research, ETH Zurich (2019).
 
 Original code:
 https://github.com/gramaziokohler/IF_jamming/blob/master/if_jamming/localization/transform.py
@@ -17,36 +17,26 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import Rhino.Geometry as rg
-import rhinoscriptsyntax as rs
+import compas.geometry as cg
 
 
-def rcs_to_wcs(rcs):
-    """Calculate the transformation matrix from the robot coordinate system.
+def rcs_to_wcs_xform(robot_base_frame):
+    """Calculate the transformation matrix for transformations between WCS to RCS.
 
     Parameters
     ----------
-    rcs
-        A list with three points: [origin, x, y] where origin is the origin of
-        the rcs given in the wcs and x and y are vectors representing the x and
-        y axis of the rcs in the wcs.
+    robot_base_frame : :class:`compas.geometry.Frame`
+        Robot base frame in WCS. The frame origin is the location of the RCS origo
+        in WCS, the X axis and Y axis are the X and Y axes of the RCS in WCS.
 
     Returns
     -------
-    :class:`Rhino.Geometry.Transform`
-        The transformation from the WCS to the RCS.
+    :obj:`list` of :obj:`list` of :obj:`float`
+        The transformation matrix.
     """
-    origin, x_vec, y_vec = rcs
-    z_vec = rs.VectorUnitize(rs.VectorCrossProduct(x_vec, y_vec))
-
-    translation = rs.XformTranslation(origin)
-    rotation = rs.XformRotation4(
-        rg.Point3d(1, 0, 0),
-        rg.Point3d(0, 1, 0),
-        rg.Point3d(0, 0, 1),
-        x_vec,
-        y_vec,
-        z_vec,
+    translation = cg.Translation(robot_base_frame.point)
+    rotation = cg.Rotation.from_basis_vectors(
+        robot_base_frame.xaxis, robot_base_frame.yaxis
     )
 
     print("---- Calculated translation ----")
@@ -54,5 +44,10 @@ def rcs_to_wcs(rcs):
     print("----- Calculated rotation ----")
     print(rotation)
 
-    transform = rs.XformInverse(translation * rotation)
+    transform = translation * rotation
+    transform.invert()
+
+    print("---- Calculated transformation ----")
+    print(transform)
+
     return transform

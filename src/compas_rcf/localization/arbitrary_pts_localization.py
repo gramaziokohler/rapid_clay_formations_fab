@@ -1,7 +1,7 @@
 """Arbitrary points method for robot relocalization.
 
-Code adapted from source code by Selen Ercan et al at Gramazio Kohler Research,
-ETH Zürich (2019).
+Code adapted from source code by Selen Ercan and Sandro Meier at Gramazio
+Kohler Research, ETH Zürich (2019).
 
 Original code:
 https://github.com/gramaziokohler/IF_jamming/blob/master/if_jamming/localization/arbitrary_point_localization.py
@@ -107,78 +107,6 @@ def _nonlinear_jacobian(x):
     ]
 
 
-def calculate_rcs_origin(rcs_coords, wcs_coords, plot_results=False):
-    """Calculate the RCS origin frame.
-
-    Finding the origin is formulated as an optimization problem where we want
-    to find the origin and two orthonormal vectors defining the coordinate
-    system. At the same time, the position of the localization points in this
-    new coordinate system should match the measurements as close as possible.
-    Therefore the deviation from the measurements is used as the cost function.
-    The only constraints are that the x and y vector need to have length 1 and
-    be orthogonal to each other.  The optimization variable is a vector with 9
-    entries: X = [o, x, y] where o is the origin of the coordinate system and
-    x, y the vectors spanning the x-y-plane. Each of them is a 3 dimensional
-    vector.  **Important**: Ensure that the order of rcs_coords and
-    measurements is identical. I.e. the i-th entry in measurements is the
-    measurement of the i-th localization point.
-
-    Parameters
-    ----------
-    rcs_coords : :obj:`tuple` of :obj:`float`
-        The points where the robot endeffector was positioned to take
-        measurements. These points are in the RCS.
-    wcs_coords : :obj:`tuple` of :obj:`float`
-        The measurements taken in the world coordinate system (WCS) with the
-        total station. These are the coordinates of the rcs_coords in
-        the WCS.
-
-    Returns
-    -------
-    :obj:`tuple` of :obj:`tuple` of :obj:`float`
-        A tuple of 3 vectors (lists with 3 elements) where the first represents
-        the origin of the RCS, the second is the direction of the x axis and
-        the third the direction of the y axis. The x and y axis are vectors
-        with length 1.
-    """
-    # Setup the constraints
-    constraints = {"type": "eq", "fun": _nonlinear_constraints}
-
-    results = []
-    slices = 4
-    for i in range(slices):
-        radians = np.deg2rad(360.0 / float(slices) * i)
-        c, s = np.cos(radians), np.sin(radians)
-        rotation = np.array(((c, -s, 0), (s, c, 0), (0, 0, 1)))
-
-        x = rotation.dot(np.array([1, 0, 0]))
-        y = rotation.dot(np.array([0, 1, 0]))
-
-        # We use the standard coordinate system as an initial guess.
-        x0 = np.array(np.concatenate(([0, 0, 0], x, y)))
-        res = minimize(
-            _objective_function,
-            x0,
-            args=(rcs_coords, wcs_coords),
-            constraints=constraints,
-            options={"disp": True},
-        )
-        results.append(res)
-
-    if plot_results:
-        _plot(rcs_coords, wcs_coords, results)
-
-    # Pick the result with the lowest objective value
-    print(results)
-    result = reduce((lambda x, y: x if x.fun < y.fun else y), results)
-
-    origin = result.x[0:3].tolist()
-    x_vec = result.x[3:6].tolist()
-    y_vec = result.x[6:9].tolist()
-
-    return [origin, x_vec, y_vec]
-
-
 def _plot(rcs_coords, wcs_coords, results):
     """Create plots to visualize multiple consecutive results from a solver."""
     rcs_coords = np.array(rcs_coords)
@@ -270,6 +198,80 @@ def _plot_result(rcs_coords, wcs_coords, result, plot_dir):
     plt.ylabel("z")
     plt.title("Y-Z projection")
     plt.savefig(plot_dir / "rcs_matching_yz.png")
+
+
+def arbitrary_pts_localization(rcs_coords, wcs_coords, plot_results=False, maxiter=100):
+    """Calculate the RCS origin frame.
+
+    Finding the origin is formulated as an optimization problem where we want
+    to find the origin and two orthonormal vectors defining the coordinate
+    system. At the same time, the position of the localization points in this
+    new coordinate system should match the measurements as close as possible.
+    Therefore the deviation from the measurements is used as the cost function.
+    The only constraints are that the x and y vector need to have length 1 and
+    be orthogonal to each other.  The optimization variable is a vector with 9
+    entries: X = [o, x, y] where o is the origin of the coordinate system and
+    x, y the vectors spanning the x-y-plane. Each of them is a 3 dimensional
+    vector.  **Important**: Ensure that the order of rcs_coords and
+    measurements is identical. I.e. the i-th entry in measurements is the
+    measurement of the i-th localization point.
+
+    Parameters
+    ----------
+    rcs_coords : :obj:`tuple` of :obj:`float`
+        The points where the robot endeffector was positioned to take
+        measurements. These points are in the RCS.
+    wcs_coords : :obj:`tuple` of :obj:`float`
+        The measurements taken in the world coordinate system (WCS) with the
+        total station. These are the coordinates of the rcs_coords in
+        the WCS.
+
+    Returns
+    -------
+    :obj:`list` of :obj:`list` of :obj:`float`
+        A tuple of 3 vectors (lists with 3 elements) where the first represents
+        the origin of the RCS, the second is the direction of the x axis and
+        the third the direction of the y axis. The x and y axis are vectors
+        with length 1.
+    """
+    # Setup the constraints
+    constraints = {"type": "eq", "fun": _nonlinear_constraints}
+
+    results = []
+    slices = 4
+    for i in range(slices):
+        radians = np.deg2rad(360.0 / float(slices) * i)
+        c, s = np.cos(radians), np.sin(radians)
+        rotation = np.array(((c, -s, 0), (s, c, 0), (0, 0, 1)))
+
+        x = rotation.dot(np.array([1, 0, 0]))
+        y = rotation.dot(np.array([0, 1, 0]))
+
+        # We use the standard coordinate system as an initial guess.
+        x0 = np.array(np.concatenate(([0, 0, 0], x, y)))
+        res = minimize(
+            _objective_function,
+            x0,
+            args=(rcs_coords, wcs_coords),
+            method="SLSQP",  # Default method for problems with constraints
+            constraints=constraints,
+            options={"disp": True, "maxiter": maxiter},
+        )
+
+        results.append(res)
+
+    if plot_results:
+        _plot(rcs_coords, wcs_coords, results)
+
+    # Pick the result with the lowest objective value
+    print(results)
+    result = reduce((lambda x, y: x if x.fun < y.fun else y), results)
+
+    origin = result.x[0:3].tolist()
+    x_vec = result.x[3:6].tolist()
+    y_vec = result.x[6:9].tolist()
+
+    return [origin, x_vec, y_vec]
 
 
 if __name__ == "__main__":
