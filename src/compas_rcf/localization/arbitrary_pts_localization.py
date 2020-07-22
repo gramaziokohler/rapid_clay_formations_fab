@@ -21,9 +21,12 @@ import tempfile
 from functools import reduce
 from pathlib import Path
 
+import compas
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import minimize
+
+compas.PRECISION = "12f"
 
 
 def _objective_function(x, rcs_coords, wcs_coords):

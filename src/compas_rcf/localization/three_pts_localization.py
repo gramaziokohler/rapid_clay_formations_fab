@@ -17,7 +17,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import compas
 import compas.geometry as cg
+
+compas.PRECISION = "12f"
 
 
 def three_point_localization(rcs_coords, wcs_coords):

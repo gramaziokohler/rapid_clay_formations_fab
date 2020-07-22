@@ -18,6 +18,9 @@ from __future__ import division
 from __future__ import print_function
 
 import compas.geometry as cg
+import compas
+
+compas.PRECISION = "12f"
 
 
 def rcs_to_wcs_xform(robot_base_frame):
