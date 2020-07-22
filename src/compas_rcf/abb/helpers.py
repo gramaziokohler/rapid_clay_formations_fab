@@ -170,13 +170,11 @@ def std_move_to_frame(
         abb.send(SetMaxSpeed(speed_override, max_tcp_speed))
 
         # Move to Frame
-        for frame in frames:
+        for f in frames:
             abb.send(
-                PrintText(
-                    " Moving to {:.3f}, {:.3f}, {:.3f}.".format(*frame.point.data)
-                )
+                PrintText(" Moving to {:.3f}, {:.3f}, {:.3f}.".format(*f.point.data))
             )
-            abb.send(MoveToFrame(frame, speed, zone, motion_type))
+            abb.send(MoveToFrame(f, speed, zone, motion_type))
 
         if timeout:
             abb.send_and_wait(Noop(), timeout=timeout)
