@@ -228,66 +228,59 @@ class AbbRcfClient(AbbClient):
     def execute_trajectory(
         self, trajectory, speed, zone, blocking=False, stop_at_last=False
     ):
+        """Execute joints or frame trajectories.
+
+        Parameters
+        ----------
+        trajectory : :class:`compas_rcf.robots.JointTrajectory` or :obj:`list` of :class:`compas.geometry.Frame`
+            Trajectory defined by joint positions or frames.
+        speed : :obj:`float`
+            Speed in mm/s.
+        zone : :obj:`int`
+            Zone defined either in millimeters or using ZoneData names.
+        blocking : :obj:`bool`, optional
+            If execution should be blocked while waiting for the robot to reach
+            last trajectory point. Defaults to ``False``
+        stop_at_last : :obj:`bool`, optional
+            If last trajectory point should be sent as a non fly-by point, i.e.
+            should the last trajectory points zone be set to Zone.FINE.
+
+        Raises
+        ------
+        ValueError
+            If the trajectory argument is not a list of frames or a JointTrajectory.
+        """  # noqa: E501
         log.debug(f"Trajectory: {trajectory}")
 
         trajectory_type = get_trajectory_type(trajectory)
 
         if trajectory_type == JOINT_TRAJECTORY_TYPE:
             log.debug("Identified type: JointTrajectory")
-            # Change zone precise to absj precise
-            # TODO: Make this make sense
-            if zone == self.zone.precise:
-                zone = self.zone.absj_precise
-
-            execute_func = self._execute_joint_trajectory
+            rrc_method = MoveToJoints
+            # Convert JointTrajectoryPoints to robot_joints_list from rrc
+            _trajectory = joint_trajectory_to_robot_joints_list(trajectory)
+            _zone = zone["joints"]
 
         elif trajectory_type == FRAME_LIST_TRAJECTORY_TYPE:
             log.debug("Identified type: Frame list")
-            execute_func = self._execute_frame_trajectory
+            rrc_method = MoveToFrame
+            _trajectory = trajectory
+            _zone = zone["frame"]
 
         else:
             raise ValueError(f"No trajectory execution function for {trajectory}.")
 
-        execute_func(
-            trajectory, speed, zone, blocking=blocking, stop_at_last=stop_at_last
-        )
+        send_method = self.send
 
-    def _execute_joint_trajectory(
-        self, trajectory, speed, zone, blocking=False, stop_at_last=False
-    ):
-        robot_joints_list = joint_trajectory_to_robot_joints_list(trajectory)
+        for traj_pt in _trajectory[:-1]:  # skip last
+            send_method(rrc_method(traj_pt, self.EXTERNAL_AXIS_DUMMY, speed, zone))
 
-        for i, rob_joints in enumerate(robot_joints_list):
+        if blocking:
+            send_method = self.send_and_wait
+        if stop_at_last:
+            _zone = Zone.FINE
 
-            # test to see if sending same conf twice causes corner error
-            if rob_joints == self.LAST_ROB_JOINTS:
-                continue
-
-            if i == len(robot_joints_list) - 1:
-                if blocking:
-                    send_func = self.send_and_wait
-                else:
-                    send_func = self.send
-                if stop_at_last:
-                    _zone = Zone.FINE
-                else:
-                    _zone = zone
-            else:
-                send_func = self.send
-                _zone = zone
-
-            cmd = MoveToJoints(rob_joints, self.EXTERNAL_AXIS_DUMMY, speed, _zone)
-            send_func(cmd)
-
-            self.LAST_ROB_JOINTS = rob_joints
-
-    def _execute_frame_trajectory(self, trajectory, speed, zone, blocking=False):
-        for i, frame in enumerate(trajectory):
-            cmd = MoveToFrame(frame, speed, zone)
-            if blocking and i == len(trajectory) - 1:
-                self.send_and_wait(cmd)
-            else:
-                self.send(cmd)
+        send_method(rrc_method(_trajectory[-1], speed, _zone))
 
     def place_bullet(self, cylinder):
         """Send movement and IO instructions to place a clay cylinder.
