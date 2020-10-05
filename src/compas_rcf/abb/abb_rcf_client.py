@@ -169,7 +169,7 @@ class AbbRcfClient(AbbClient):
                 self.set_joint_pos.end,
                 self.EXTERNAL_AXIS_DUMMY,
                 self.speed.travel,
-                self.zone.travel,
+                self.zone.travel["joints"],
             )
         )
 
@@ -198,13 +198,15 @@ class AbbRcfClient(AbbClient):
         T = Translation(vector)
         egress_frame = pick_elem.get_uncompressed_top_frame().transformed(T)
 
-        self.send(MoveToFrame(egress_frame, self.speed.travel, self.zone.travel))
+        self.send(
+            MoveToFrame(egress_frame, self.speed.travel, self.zone.travel["frame"])
+        )
 
         self.send(
             MoveToFrame(
                 pick_elem.get_uncompressed_top_frame(),
-                self.speed.travel,
-                self.zone.precise,
+                self.speed.precise,
+                self.zone.pick["frame"],
             )
         )
 
@@ -216,7 +218,7 @@ class AbbRcfClient(AbbClient):
             MoveToFrame(
                 egress_frame,
                 self.speed.precise,
-                self.zone.precise,
+                self.zone.pick["frame"],
                 motion_type=Motion.LINEAR,
             )
         )
@@ -236,14 +238,14 @@ class AbbRcfClient(AbbClient):
             Trajectory defined by joint positions or frames.
         speed : :obj:`float`
             Speed in mm/s.
-        zone : :obj:`int`
+        zone : :obj:`int` or :obj:`str`
             Zone defined either in millimeters or using ZoneData names.
         blocking : :obj:`bool`, optional
             If execution should be blocked while waiting for the robot to reach
             last trajectory point. Defaults to ``False``
         stop_at_last : :obj:`bool`, optional
             If last trajectory point should be sent as a non fly-by point, i.e.
-            should the last trajectory points zone be set to Zone.FINE.
+            should the last trajectory points zone be set to `Zone.FINE`.
 
         Raises
         ------
@@ -273,14 +275,14 @@ class AbbRcfClient(AbbClient):
         send_method = self.send
 
         for traj_pt in _trajectory[:-1]:  # skip last
-            send_method(rrc_method(traj_pt, self.EXTERNAL_AXIS_DUMMY, speed, zone))
+            send_method(rrc_method(traj_pt, self.EXTERNAL_AXIS_DUMMY, speed, _zone))
 
         if blocking:
             send_method = self.send_and_wait
         if stop_at_last:
             _zone = Zone.FINE
 
-        send_method(rrc_method(_trajectory[-1], speed, _zone))
+        send_method(rrc_method(_trajectory[-1], self.EXTERNAL_AXIS_DUMMY, speed, _zone))
 
     def place_bullet(self, cylinder):
         """Send movement and IO instructions to place a clay cylinder.
@@ -340,7 +342,7 @@ class AbbRcfClient(AbbClient):
         self.execute_trajectory(
             cylinder.trajectory_top_to_compressed_top,
             self.speed.precise,
-            self.zone.precise,
+            self.zone.push,
         )
         # TODO: make this frame compatible, maybe set trajectory to either
         # reverse last of egress or frame and execute trajectory?
@@ -353,7 +355,7 @@ class AbbRcfClient(AbbClient):
                 last_pt_compressed_top_to_top,
                 self.EXTERNAL_AXIS_DUMMY,
                 self.speed.precise,
-                self.zone.travel,
+                self.zone.travel["joints"],
             )
         )
 
@@ -366,7 +368,7 @@ class AbbRcfClient(AbbClient):
                 last_pt_top_to_egress,
                 self.EXTERNAL_AXIS_DUMMY,
                 self.speed.travel,
-                self.zone.travel,
+                self.zone.travel["joints"],
             )
         )
 
