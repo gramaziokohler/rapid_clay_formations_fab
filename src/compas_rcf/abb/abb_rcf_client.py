@@ -147,7 +147,7 @@ class AbbRcfClient(AbbClient):
                 self.set_joint_pos.start,
                 self.EXTERNAL_AXIS_DUMMY,
                 self.speed.travel,
-                self.zone.travel,
+                self.zone.travel["joints"],
             )
         )
         log.debug("Sent move to safe joint position")
@@ -193,7 +193,7 @@ class AbbRcfClient(AbbClient):
         # start watch
         self.send(StartWatch())
 
-        # hotfix for <100 mm egress distance (knocks down cylinders when leaving)
+        # TODO: Use separate obj for pick elems?
         vector = pick_elem.get_normal() * self.pick_place_tool.elem_pick_egress_dist
         T = Translation(vector)
         egress_frame = pick_elem.get_uncompressed_top_frame().transformed(T)
@@ -238,14 +238,17 @@ class AbbRcfClient(AbbClient):
             Trajectory defined by joint positions or frames.
         speed : :obj:`float`
             Speed in mm/s.
-        zone : :obj:`int` or :obj:`str`
-            Zone defined either in millimeters or using ZoneData names.
+        zone : :obj:`dict`
+            Dictionary with zones defined either in millimeters or using
+            ZoneData names for :class:`~compas_rrc.MoveToFrame` and
+            :class:`~compas_rrc.MoveToJoints`. E.g. ``{"frame":
+            compas_rrc.Zone.Z10, "joints": compas_rrc.Zone.Z50}``.
         blocking : :obj:`bool`, optional
             If execution should be blocked while waiting for the robot to reach
             last trajectory point. Defaults to ``False``
         stop_at_last : :obj:`bool`, optional
             If last trajectory point should be sent as a non fly-by point, i.e.
-            should the last trajectory points zone be set to `Zone.FINE`.
+            should the last trajectory points zone be set to `compas_rrc.Zone.FINE`.
 
         Raises
         ------
@@ -282,6 +285,7 @@ class AbbRcfClient(AbbClient):
         if stop_at_last:
             _zone = Zone.FINE
 
+        # send last
         send_method(rrc_method(_trajectory[-1], self.EXTERNAL_AXIS_DUMMY, speed, _zone))
 
     def place_bullet(self, cylinder):
