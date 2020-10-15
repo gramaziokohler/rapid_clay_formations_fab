@@ -31,7 +31,7 @@ requirements = [
 
 extras_require = {
     "dev": [
-        "attrs ~= 19.3",
+        "attrs >= 19.3,< 21.0",
         "black ~= 19.10b0",
         "doc8",
         "flake8",
