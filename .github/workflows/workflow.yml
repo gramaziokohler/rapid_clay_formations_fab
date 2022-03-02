@@ -17,7 +17,7 @@ jobs:
     steps:
       -
         name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       -
         name: Set up Python 3.8
@@ -113,7 +113,7 @@ jobs:
     steps:
       -
         name: Checkout code  # This is needed for creating release on GitHub
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       -
         name: Download dist directory from build job
